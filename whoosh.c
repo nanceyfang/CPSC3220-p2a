@@ -2,17 +2,22 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/wait.h>
 
 #define MAX_LEN 128
 
 int main(){
   
+  char error_message[30] = "An error has occurred\n";
+
+  //write(STDERR_FILENO, error_message, strlen(error_message));
+
   //char *input = malloc(sizeof(char)*MAX_LEN);
   char input[MAX_LEN];
 
-  printf("Shell start...\n");
-
   const char space[4] = " \t\n";
+
+  printf("whoosh> ");
 
   while (1) {
     fgets(input, MAX_LEN, stdin);
@@ -20,18 +25,24 @@ int main(){
     char *token;
     token = strtok(input, space);
 
+    pid_t pid = 1; // just to initialize for whoosh>
+
     while (token!=NULL){
-      printf("%s\n",token);
+   
+      // check if input already implemented
+
       if ( !(strcmp(token, "exit")) ){
         //free(input);
         exit(0);
       }
 
       if ( !(strcmp(token, "pwd")) ){
-        pid_t pid = fork();
+        pid = fork();
         //parent process
         if (pid){
-          //wait i guess?
+          //wait for child to finish
+          int status;
+          waitpid(pid, &status, 0);
         }
         else{ //child process
           char cwd[MAX_LEN];
@@ -41,7 +52,17 @@ int main(){
 
       }
 
+      if ( !(strcmp(token, "cd")) ){
+          token = strtok(NULL, space);
+          if (token == NULL){
+            chdir( getenv("HOME") );
+          }
+      }
+
       token = strtok(NULL, space);
+      if (pid){
+        printf("whoosh> ");
+      }
     }
   }
 
