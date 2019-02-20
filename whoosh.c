@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
 #include <dirent.h>
 #include <stdbool.h>
 
@@ -20,136 +21,141 @@ int main(){
 
   const char space[4] = " \t\n";
 
-  printf("whoosh> ");
+  char *token;
+	char *input_copy = malloc(sizeof(char*)*strlen(input));
 
   while (1) {
-    fgets(input, MAX_LEN, stdin);
-
-    char *token;
-		char *input_copy = malloc(sizeof(char*)*strlen(input));
+  	printf("whoosh> ");
+    
+		fgets(input, MAX_LEN, stdin);
 		strcpy(input_copy, input);
     token = strtok(input_copy, space);
-
     pid_t pid = 1; // just to initialize for whoosh>
 
-//    while (token!=NULL){
-  		 
+  	if (token!=NULL){	 
       if ( !(strcmp(token, "exit")) ){
         free(input_copy);
         exit(0);
       }
+			
+			bool too_long = false;
 
-			built_in = false;
-
-      if ( !(strcmp(token, "pwd")) ){
-				built_in = true;
-        pid = fork();
-        //parent process
-        if (pid){
-          //wait for child to finish
-          int status;
-          waitpid(pid, &status, 0);
-        }
-        else{ //child process
-          char cwd[MAX_LEN];
-          printf("%s\n", getcwd(cwd, sizeof(cwd)));
-          exit(0);
-        }
-
-      }
-
-			if ( !(strcmp(token, "path")) ){
-				built_in = true;
-				//uh i think i need to fix this somehow
-				printf("%s\n", getenv("PATH") );
-      }
-
-			if ( !(strcmp(token, "cd")) ){
-					built_in = true;
-          token = strtok(NULL, space);
-          if (token == NULL){
-            chdir( getenv("HOME") );
-          }
-					else{ // cd to token
-						chdir( token );
-					}
-      }
-
-			if (token!=NULL && !built_in){ 
-      	// check if input already implemented
-				// go to /bin or /usr/bin and check
-				DIR *d; // like a file?
-				struct dirent *directory;
-				d = opendir("/bin");
-				if(d){
-					directory=readdir(d);
-					while (directory != NULL){
-						// command in /bin
-						if ( !(strcmp(token,directory->d_name)) ){
-							//printf("match");
-
-	//						printf("i: %s\n", input);
-		//					printf("ic: %s\n", input_copy);
-
-							pid = fork();
-							if (pid){
-								int status;
-			          waitpid(pid, &status, 0);
-							}
-							else{
-								int argc = 0; 
-								char command[MAX_LEN];
-								strcpy(command, "/bin/");
-								strcat(command, token);
-
-								// go through input for arguments?
-								while (token!=NULL) {
-									token = strtok(NULL, space);
-									argc++;
-								}
-							
-								//if (argc<2)
-									argc++;
-
-								char *args[argc];
-
-								for (int j = 0; j < argc; j++){
-									args[j]=NULL;
-								}
-
-								// go through input to get arguments
-								char * token2;
-								int i = 0;
-						    token2 = strtok(input, space);
-								while (token2!=NULL){
-									args[i]=token2;
-									token2 = strtok(NULL,space);
-									i++;
-								}
-						
-								char *test[] = {args[0], NULL};
-	
-								execv(command, args);
-								exit(0);	
-							}			
-							break;
-						}		
-						directory=readdir(d);
-					}
-					closedir(d);
-				}
+			printf("\nsize: %d\ninput: %s\n", sizeof(input), input);
+			if (sizeof(input) > 128){
+      	write(STDERR_FILENO, error_message, strlen(error_message));
+				printf("\ntoolong\n");
+				too_long=true;
 			}
 
-      token = strtok(NULL, space);
+			if (too_long == false){
+
+				built_in = false;
+
+  	    if ( !(strcmp(token, "pwd")) ){
+					built_in = true;
+  	      pid = fork();
+    	    //parent process
+      	  if (pid){
+        	  //wait for child to finish
+          	int status;
+	          waitpid(pid, &status, 0);
+  	      }
+    	    else{ //child process
+      	    char cwd[MAX_LEN];
+        	  printf("%s\n", getcwd(cwd, sizeof(cwd)));
+          	exit(0);
+	        }
+
+  	    }
+
+				if ( !(strcmp(token, "path")) ){
+					built_in = true;
+					//uh i think i need to fix this somehow
+					printf("%s\n", getenv("PATH") );
+  	    }
+
+				if ( !(strcmp(token, "cd")) ){
+						built_in = true;
+        	  token = strtok(NULL, space);
+          	if (token == NULL){
+            	chdir( getenv("HOME") );
+	          }
+						else{ // cd to token
+							chdir( token );
+						}
+	      }
+			
+				bool skip = true;
+				if (token!=NULL && !built_in){ 
+  	    	// check if input already implemented
+					// go to /bin or /usr/bin and check
+					char command1[MAX_LEN];
+					strcpy(command1, "/bin/");
+					strcat(command1, token);
+	
+					char command2[MAX_LEN];
+					strcpy(command2, "usr/bin/");
+					strcat(command2, token);
+
+					char command[MAX_LEN];
+					struct stat fileStat;
+	
+					if(stat(command1, &fileStat) >= 0 ){
+						skip = false;
+						strcpy(command, command1);
+					}
+					else if(stat(command2, &fileStat) >= 0 ){
+						skip = false;
+						strcpy(command,command2);
+					}
+					else{
+						write(STDERR_FILENO, error_message, strlen(error_message));	
+						//skip = true;
+					}
+
+					if (skip==false){							
+						pid = fork();
+						if (pid){
+							int status;
+				  		waitpid(pid, &status, 0);
+						}
+						else{
+							int argc = 1; //start at 1 bc apparently you need an extra NULL arg
+							// go through input for arguments?
+							while (token!=NULL) {
+								token = strtok(NULL, space);
+								argc++;
+							}
+							
+							char *args[argc];
+
+							for (int j = 0; j < argc; j++){
+								args[j]=NULL;
+							}
+
+							// go through input to get arguments
+							char * token2;
+							int i = 0;
+							token2 = strtok(input, space);
+							while (token2!=NULL){
+								args[i]=token2;
+								token2 = strtok(NULL,space);
+								i++;
+							}
+						
+							execv(command, args);
+							exit(0);
+						}
+					}		
+				}	
+			}
 
       if (pid){
         int status;
         waitpid(pid, &status, 0);
-
-        printf("whoosh> ");
       }
-
-  //  }
+//this over here officer
+    }
   }
 
   exit(0);
