@@ -12,7 +12,6 @@ int main(){
   
   char error_message[30] = "An error has occurred\n";
 
-
   //write(STDERR_FILENO, error_message, strlen(error_message));
 
   //char *input = malloc(sizeof(char)*MAX_LEN);
@@ -27,14 +26,16 @@ int main(){
     fgets(input, MAX_LEN, stdin);
 
     char *token;
-    token = strtok(input, space);
+		char *input_copy = malloc(sizeof(char*)*strlen(input));
+		strcpy(input_copy, input);
+    token = strtok(input_copy, space);
 
     pid_t pid = 1; // just to initialize for whoosh>
 
-    while (token!=NULL){
+//    while (token!=NULL){
   		 
       if ( !(strcmp(token, "exit")) ){
-        //free(input);
+        free(input_copy);
         exit(0);
       }
 
@@ -87,9 +88,8 @@ int main(){
 						if ( !(strcmp(token,directory->d_name)) ){
 							//printf("match");
 
-							int argc = 0;
-							
-							printf("%s\n", input);
+	//						printf("i: %s\n", input);
+		//					printf("ic: %s\n", input_copy);
 
 							pid = fork();
 							if (pid){
@@ -97,17 +97,40 @@ int main(){
 			          waitpid(pid, &status, 0);
 							}
 							else{
+								int argc = 0; 
 								char command[MAX_LEN];
 								strcpy(command, "/bin/");
 								strcat(command, token);
 
 								// go through input for arguments?
-								for (int i = 0; i < strlen(input); i++){
-									printf("%c", input[i]);
-								}			
+								while (token!=NULL) {
+									token = strtok(NULL, space);
+									argc++;
+								}
+							
+								//if (argc<2)
+									argc++;
 
-								char *args[] = {token, NULL, NULL, NULL};
+								char *args[argc];
+
+								for (int j = 0; j < argc; j++){
+									args[j]=NULL;
+								}
+
+								// go through input to get arguments
+								char * token2;
+								int i = 0;
+						    token2 = strtok(input, space);
+								while (token2!=NULL){
+									args[i]=token2;
+									token2 = strtok(NULL,space);
+									i++;
+								}
+						
+								char *test[] = {args[0], NULL};
+	
 								execv(command, args);
+								exit(0);	
 							}			
 							break;
 						}		
@@ -120,10 +143,13 @@ int main(){
       token = strtok(NULL, space);
 
       if (pid){
+        int status;
+        waitpid(pid, &status, 0);
+
         printf("whoosh> ");
       }
 
-    }
+  //  }
   }
 
   exit(0);
