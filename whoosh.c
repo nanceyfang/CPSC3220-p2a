@@ -24,6 +24,12 @@ int main(){
   char *token;
 	char *input_copy = malloc(sizeof(char*)*strlen(input));
 
+  int num_path = 0;
+//  putenv("PATH=/");
+
+  char path_name[MAX_LEN];
+  strcpy(path_name, "");
+
   while (1) {
   	printf("whoosh> ");
     
@@ -40,10 +46,10 @@ int main(){
 			
 			bool too_long = false;
 
-			printf("\nsize: %d\ninput: %s\n", sizeof(input), input);
+//			printf("\nsize: %d\ninput: %s\n", sizeof(input), input);
 			if (sizeof(input) > 128){
       	write(STDERR_FILENO, error_message, strlen(error_message));
-				printf("\ntoolong\n");
+//				printf("\ntoolong\n");
 				too_long=true;
 			}
 
@@ -69,49 +75,95 @@ int main(){
   	    }
 
 				if ( !(strcmp(token, "path")) ){
-					built_in = true;
-					//uh i think i need to fix this somehow
-					printf("%s\n", getenv("PATH") );
+          num_path = 0;
+          built_in = true;
+  
+          char path[MAX_LEN];
+          strcpy(path, "PATH=");
+
+          int exists = true;
+          token = strtok(NULL, space);
+          while (token!=NULL){
+  					struct stat fileStat;
+	
+	  				if(stat(token, &fileStat) < 0 ){
+              write(STDERR_FILENO, error_message, strlen(error_message)); 
+              exists = false;
+              break;
+				  	}
+
+            num_path++;
+            strcat(path, token);
+            strcat(path, " ");
+            token = strtok(NULL, space);
+          }
+
+          if (exists == true){
+            putenv(path);
+           // printf("%d\n", num_path);
+           strcpy(path_name, getenv("PATH"));
+          }
   	    }
 
-				if ( !(strcmp(token, "cd")) ){
+				if ( (token != NULL) && !(strcmp(token, "cd")) ){
 						built_in = true;
         	  token = strtok(NULL, space);
           	if (token == NULL){
             	chdir( getenv("HOME") );
 	          }
-						else{ // cd to token
-							chdir( token );
+						else{ // check if too many arguments
+              char tok_copy[MAX_LEN];
+              strcpy(tok_copy,token);
+              token=strtok(NULL, space);
+              if (token == NULL){
+                if (chdir( tok_copy ) != 0){
+                  write(STDERR_FILENO, error_message, strlen(error_message));
+                }
+              }
+              else{
+                write(STDERR_FILENO, error_message, strlen(error_message));
+              }
 						}
 	      }
 			
 				bool skip = true;
 				if (token!=NULL && !built_in){ 
-  	    	// check if input already implemented
-					// go to /bin or /usr/bin and check
-					char command1[MAX_LEN];
-					strcpy(command1, "/bin/");
-					strcat(command1, token);
-	
-					char command2[MAX_LEN];
-					strcpy(command2, "usr/bin/");
-					strcat(command2, token);
+  	    	// check if input already implemented in path
 
-					char command[MAX_LEN];
-					struct stat fileStat;
-	
-					if(stat(command1, &fileStat) >= 0 ){
-						skip = false;
-						strcpy(command, command1);
-					}
-					else if(stat(command2, &fileStat) >= 0 ){
-						skip = false;
-						strcpy(command,command2);
-					}
-					else{
-						write(STDERR_FILENO, error_message, strlen(error_message));	
-						//skip = true;
-					}
+          //printf("path: %s\n", getenv("PATH"));
+
+          char path_copy[MAX_LEN];
+
+          char command[MAX_LEN];
+          strcpy(command, "");
+
+          if ( path_name !=NULL && strlen(path_name) <= MAX_LEN ){
+
+            strcpy(path_copy, path_name);
+            char *token2;
+            token2 = strtok(path_copy, space); // break up path to check directories
+
+  					struct stat file_stat;
+
+            // no path?
+            if (token2==NULL){
+              strcpy(command, "/");
+            }
+
+            while(token2!=NULL){ 
+              strcpy(command, "");
+              strcpy(command, token2);
+              strcat(command, "/");
+              strcat(command, token);
+              if (stat(command, &file_stat) >= 0){
+                skip = false;
+                break;
+              }
+              token2 = strtok(NULL, space);
+            }
+            
+          }
+        
 
 					if (skip==false){							
 						pid = fork();
@@ -146,7 +198,10 @@ int main(){
 							execv(command, args);
 							exit(0);
 						}
-					}		
+					}
+          else{
+      			write(STDERR_FILENO, error_message, strlen(error_message));		
+          }
 				}	
 			}
 
