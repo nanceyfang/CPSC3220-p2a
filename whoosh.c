@@ -67,8 +67,36 @@ int main(){
   	      }
     	    else{ //child process
       	    char cwd[MAX_LEN];
-        	  printf("%s\n", getcwd(cwd, sizeof(cwd)));
-          	exit(0);
+            
+            //printf("ip: %s\n", input_copy);
+
+            token = strtok(NULL, space);
+           
+              printf("t: %s\n", token);
+
+              if (token == NULL){
+                printf("here"); 
+                printf("t: %s",token);
+              }
+            // check if redirection > 
+            if ( !strcmp(token,">") ){
+              printf("redirection\n");
+
+              token = strtok(NULL, space);
+              if (token == NULL){ // no output file
+                write(STDERR_FILENO, error_message, strlen(error_message));
+                exit(0);
+              }
+              exit(0);
+            }
+            //else{
+            getcwd(cwd, sizeof(cwd));
+            //  printf("a%s\n", getcwd(cwd, sizeof(cwd)));
+            //  printf("%d\n",strlen(cwd));
+              write(STDOUT_FILENO, cwd, strlen(cwd));
+              write(STDOUT_FILENO, "\n", 1);
+              exit(0);
+            //}
 	        }
 
   	    }
