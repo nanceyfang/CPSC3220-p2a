@@ -16,7 +16,7 @@ int main(){
   //write(STDERR_FILENO, error_message, strlen(error_message));
 
   //char *input = malloc(sizeof(char)*MAX_LEN);
-  char input[MAX_LEN];
+  char input[MAX_LEN+20];
 	bool built_in = false;
 
   const char space[4] = " \t\n";
@@ -33,7 +33,7 @@ int main(){
   while (1) {
   	printf("whoosh> ");
     
-		fgets(input, MAX_LEN, stdin);
+		fgets(input, MAX_LEN+20, stdin);
 		strcpy(input_copy, input);
     token = strtok(input_copy, space);
     pid_t pid = 1; // just to initialize for whoosh>
@@ -46,10 +46,9 @@ int main(){
 			
 			bool too_long = false;
 
-//			printf("\nsize: %d\ninput: %s\n", sizeof(input), input);
-			if (sizeof(input) > 128){
+
+			if ( strlen(input) > MAX_LEN ){
       	write(STDERR_FILENO, error_message, strlen(error_message));
-//				printf("\ntoolong\n");
 				too_long=true;
 			}
 
@@ -172,7 +171,7 @@ int main(){
 				  		waitpid(pid, &status, 0);
 						}
 						else{
-							int argc = 1; //start at 1 bc apparently you need an extra NULL arg
+							int argc = 1; //start at 1 bc you need an extra NULL arg
 							// go through input for arguments?
 							while (token!=NULL) {
 								token = strtok(NULL, space);
