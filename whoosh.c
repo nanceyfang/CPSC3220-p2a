@@ -71,15 +71,9 @@ int main(){
             //printf("ip: %s\n", input_copy);
 
             token = strtok(NULL, space);
-           
-              printf("t: %s\n", token);
 
-              if (token == NULL){
-                printf("here"); 
-                printf("t: %s",token);
-              }
             // check if redirection > 
-            if ( !strcmp(token,">") ){
+            if ( token != NULL && !strcmp(token,">") ){
               printf("redirection\n");
 
               token = strtok(NULL, space);
@@ -90,6 +84,7 @@ int main(){
               exit(0);
             }
             //else{
+						printf("xd\n");
             getcwd(cwd, sizeof(cwd));
             //  printf("a%s\n", getcwd(cwd, sizeof(cwd)));
             //  printf("%d\n",strlen(cwd));
