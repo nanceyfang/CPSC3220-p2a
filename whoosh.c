@@ -81,17 +81,33 @@ int main(){
                 write(STDERR_FILENO, error_message, strlen(error_message));
                 exit(0);
               }
+
+              // output file
+              char file_name[strlen(token)+5];
+              strcpy(file_name, token);
+              strcat(file_name, ".out");
+              printf("filename: %s\n", file_name);
+              printf("t: %s\n", token);
+              // too many arguments
+              token = strtok(NULL, space);
+              printf("t: %s\n", token);
+              if (token != NULL){
+                printf("too many\n");
+                write(STDERR_FILENO, error_message, strlen(error_message));
+                exit(0);
+              }
+              FILE *file_ptr;
+              file_ptr = fopen(file_name, "w");
+              getcwd(cwd, sizeof(cwd));
+              //write(STDOUT_FILENO, cwd, strlen(cwd));
+              fputs(cwd, file_ptr);
+              fclose(file_ptr);
               exit(0);
             }
-            //else{
-						printf("xd\n");
             getcwd(cwd, sizeof(cwd));
-            //  printf("a%s\n", getcwd(cwd, sizeof(cwd)));
-            //  printf("%d\n",strlen(cwd));
-              write(STDOUT_FILENO, cwd, strlen(cwd));
-              write(STDOUT_FILENO, "\n", 1);
-              exit(0);
-            //}
+            write(STDOUT_FILENO, cwd, strlen(cwd));
+            write(STDOUT_FILENO, "\n", 1);
+            exit(0);
 	        }
 
   	    }
