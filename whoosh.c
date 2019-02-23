@@ -16,7 +16,7 @@ int main(){
   //write(STDERR_FILENO, error_message, strlen(error_message));
 
   //char *input = malloc(sizeof(char)*MAX_LEN);
-  char input[MAX_LEN+20];
+  char input[MAX_LEN+50];
 	bool built_in = false;
 
   const char space[4] = " \t\n";
@@ -33,7 +33,7 @@ int main(){
   while (1) {
   	printf("whoosh> ");
     
-		fgets(input, MAX_LEN+20, stdin);
+		fgets(input, MAX_LEN+50, stdin);
 		strcpy(input_copy, input);
     token = strtok(input_copy, space);
     pid_t pid = 1; // just to initialize for whoosh>
@@ -45,7 +45,6 @@ int main(){
       }
 			
 			bool too_long = false;
-
 
 			if ( strlen(input) > MAX_LEN ){
       	write(STDERR_FILENO, error_message, strlen(error_message));
@@ -74,8 +73,6 @@ int main(){
 
             // check if redirection > 
             if ( token != NULL && !strcmp(token,">") ){
-              printf("redirection\n");
-
               token = strtok(NULL, space);
               if (token == NULL){ // no output file
                 write(STDERR_FILENO, error_message, strlen(error_message));
@@ -86,20 +83,16 @@ int main(){
               char file_name[strlen(token)+5];
               strcpy(file_name, token);
               strcat(file_name, ".out");
-              printf("filename: %s\n", file_name);
-              printf("t: %s\n", token);
               // too many arguments
               token = strtok(NULL, space);
-              printf("t: %s\n", token);
               if (token != NULL){
-                printf("too many\n");
                 write(STDERR_FILENO, error_message, strlen(error_message));
                 exit(0);
               }
+              // write to the file 
               FILE *file_ptr;
               file_ptr = fopen(file_name, "w");
               getcwd(cwd, sizeof(cwd));
-              //write(STDOUT_FILENO, cwd, strlen(cwd));
               fputs(cwd, file_ptr);
               fclose(file_ptr);
               exit(0);
@@ -202,7 +195,6 @@ int main(){
             
           }
         
-
 					if (skip==false){							
 						pid = fork();
 						if (pid){
@@ -211,29 +203,69 @@ int main(){
 						}
 						else{
 							int argc = 1; //start at 1 bc you need an extra NULL arg
-							// go through input for arguments?
-							while (token!=NULL) {
-								token = strtok(NULL, space);
+ 
+              char input_copy2[MAX_LEN];
+                // = malloc(sizeof(char*)*strlen(input));
+              strcpy(input_copy2, input);
+
+              // go through arguments
+							char * token2;
+							token2 = strtok(input, space);
+							while (token2!=NULL && strcmp(token2, ">") ){
+								token2 = strtok(NULL,space);
 								argc++;
 							}
-							
+
+              if (token2 != NULL && !strcmp(token2, ">")){
+                printf("redirection\n");
+                token = strtok(NULL, space);
+                if (token == NULL){
+      			      write(STDERR_FILENO, error_message, strlen(error_message));		
+                }
+                else{ // write to a file
+                  char file_name[strlen(token2)+5];
+                  strcpy(file_name, token);
+                  strcat(file_name, ".out");
+                  // too many arguments
+                  token2 = strtok(NULL, space);
+                  if (token2 != NULL){
+                    write(STDERR_FILENO, error_message, strlen(error_message));
+                    exit(0);
+                  }
+              
+                  // write to the file 
+                  FILE *file_ptr;
+                  file_ptr = fopen(file_name, "w");
+                  
+                  fputs("here", file_ptr);
+                  fclose(file_ptr);
+ 
+                }
+                exit(0);
+              }						
+
 							char *args[argc];
 
 							for (int j = 0; j < argc; j++){
 								args[j]=NULL;
 							}
-
+ 
 							// go through input to get arguments
-							char * token2;
+							char * token3;
 							int i = 0;
-							token2 = strtok(input, space);
-							while (token2!=NULL){
-								args[i]=token2;
-								token2 = strtok(NULL,space);
+							token3 = strtok(input_copy2, space);
+							while (token3!=NULL){
+								args[i]=token3;
+								token3 = strtok(NULL,space);
 								i++;
 							}
-						
-							execv(command, args);
+
+/*              for (int h = 0; h < argc; h++)
+              {
+                printf("%d: %s\n",h, args[h]);
+              }
+*/
+              execv(command, args);
 							exit(0);
 						}
 					}
