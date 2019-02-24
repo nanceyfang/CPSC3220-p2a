@@ -4,6 +4,8 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <fcntl.h>
 #include <dirent.h>
 #include <stdbool.h>
 
@@ -216,6 +218,8 @@ int main(){
 								argc++;
 							}
 
+              //FILE *file_ptr;
+              
               if (token2 != NULL && !strcmp(token2, ">")){
                 printf("redirection\n");
                 token = strtok(NULL, space);
@@ -224,8 +228,11 @@ int main(){
                 }
                 else{ // write to a file
                   char file_name[strlen(token2)+5];
+                  char file_err[strlen(token2)+5];
                   strcpy(file_name, token);
                   strcat(file_name, ".out");
+                  strcpy(file_err, token);
+                  strcpy(file_err, ".err");
                   // too many arguments
                   token2 = strtok(NULL, space);
                   if (token2 != NULL){
@@ -234,14 +241,17 @@ int main(){
                   }
               
                   // write to the file 
-                  FILE *file_ptr;
-                  file_ptr = fopen(file_name, "w");
-                  
-                  fputs("here", file_ptr);
-                  fclose(file_ptr);
- 
+                  int file_d = open(file_name, O_RDWR | O_CREAT, S_IROTH | S_IXOTH);
+                  int file_de = open(file_err, O_RDWR | O_CREAT, S_IROTH | S_IXOTH);
+                 
+                  dup2(file_d,1);
+                  dup2(file_de,2);
+
+                  //fputs("here", file_ptr);
+
+                  close(file_d);
+                  close(file_de);
                 }
-                exit(0);
               }						
 
 							char *args[argc];
@@ -254,7 +264,7 @@ int main(){
 							char * token3;
 							int i = 0;
 							token3 = strtok(input_copy2, space);
-							while (token3!=NULL){
+							while (token3!=NULL && strcmp(token3,">")){
 								args[i]=token3;
 								token3 = strtok(NULL,space);
 								i++;
