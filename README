@@ -1,0 +1,20 @@
+Nancey Fang
+Project 2a
+
+Implementation
+	I had an infinite while loop that prints out "whoosh> " to simulate the 
+bash running. The input is taken in and split by white space. The input is 
+then parsed to check if it's "exit", "pwd", "cd", "path", or an existing 
+executable in the path locations. Exit just calls the exit(0) syscall. 
+Pwd uses a child process to call getcwd() to get the current directory.
+Cd calls chdir to change the current directory. If there is an argument, 
+cd will check if the directory exists and go to the directory. If there isn't
+an argument, it'll go to the home directory. If there is more than 1 argument,
+it will print an error. 
+Path changes the PATH to the specified directories. If they don't exist, 
+it returns an error. 
+I check if an executable already exists in the PATH by calling stat. Then,
+I fork and have the child process read in the arguments and call execv to
+execute the command. 
+For redirection, I use open to create the files and dup to change where
+the stdout redirects to. 

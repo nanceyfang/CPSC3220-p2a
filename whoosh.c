@@ -15,9 +15,6 @@ int main(){
   
   char error_message[30] = "An error has occurred\n";
 
-  //write(STDERR_FILENO, error_message, strlen(error_message));
-
-  //char *input = malloc(sizeof(char)*MAX_LEN);
   char input[MAX_LEN+50];
 	bool built_in = false;
 
@@ -27,7 +24,6 @@ int main(){
 	char *input_copy = malloc(sizeof(char*)*strlen(input));
 
   int num_path = 0;
-//  putenv("PATH=/");
 
   char path_name[MAX_LEN];
   strcpy(path_name, "");
@@ -278,7 +274,7 @@ int main(){
         int status;
         waitpid(pid, &status, 0);
       }
-//this over here officer
+
     }
   }
 
