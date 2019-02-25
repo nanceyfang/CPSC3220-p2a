@@ -133,7 +133,6 @@ int main(){
 
           if (exists == true){
             putenv(path);
-           // printf("%d\n", num_path);
            strcpy(path_name, getenv("PATH"));
           }
   	    }
@@ -162,9 +161,6 @@ int main(){
 				bool skip = true;
 				if (token!=NULL && !built_in){ 
   	    	// check if input already implemented in path
-
-          //printf("path: %s\n", getenv("PATH"));
-
           char path_copy[MAX_LEN];
 
           char command[MAX_LEN];
@@ -223,30 +219,29 @@ int main(){
               if (token2 != NULL && !strcmp(token2, ">")){
                 token = strtok(NULL, space);
                 if (token == NULL){
+									// no file name
       			      write(STDERR_FILENO, error_message, strlen(error_message));		
                 }
                 else{ // write to a file
                   char file_name[strlen(token2)+5];
                   char file_err[strlen(token2)+5];
                   strcpy(file_name, token);
-                  strcat(file_name, ".out");
                   strcpy(file_err, token);
-                  strcpy(file_err, ".err");
+                  strcat(file_name, ".out");
+                  strcat(file_err, ".err");
                   // too many arguments
                   token2 = strtok(NULL, space);
                   if (token2 != NULL){
                     write(STDERR_FILENO, error_message, strlen(error_message));
                     exit(0);
                   }
-              
+             			printf("%s\n", file_err); 
                   // write to the file 
-                  int file_d = open(file_name, O_RDWR | O_CREAT, S_IROTH | S_IXOTH);
-                  int file_de = open(file_err, O_RDWR | O_CREAT, S_IROTH | S_IXOTH);
+                  int file_d = open(file_name, O_WRONLY | O_CREAT | O_TRUNC, 0744);
+                  int file_de = open(file_err, O_WRONLY | O_CREAT | O_TRUNC, 0744);
                  
                   dup2(file_d,1);
                   dup2(file_de,2);
-
-                  //fputs("here", file_ptr);
 
                   close(file_d);
                   close(file_de);
@@ -269,11 +264,6 @@ int main(){
 								i++;
 							}
 
-/*              for (int h = 0; h < argc; h++)
-              {
-                printf("%d: %s\n",h, args[h]);
-              }
-*/
               execv(command, args);
 							exit(0);
 						}
