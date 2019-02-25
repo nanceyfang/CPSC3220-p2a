@@ -221,7 +221,6 @@ int main(){
               //FILE *file_ptr;
               
               if (token2 != NULL && !strcmp(token2, ">")){
-                printf("redirection\n");
                 token = strtok(NULL, space);
                 if (token == NULL){
       			      write(STDERR_FILENO, error_message, strlen(error_message));		
