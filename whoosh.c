@@ -231,7 +231,6 @@ int main(){
                     write(STDERR_FILENO, error_message, strlen(error_message));
                     exit(0);
                   }
-             			printf("%s\n", file_err); 
                   // write to the file 
                   int file_d = open(file_name, O_WRONLY | O_CREAT | O_TRUNC, 0744);
                   int file_de = open(file_err, O_WRONLY | O_CREAT | O_TRUNC, 0744);
